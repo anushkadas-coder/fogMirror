@@ -4,9 +4,16 @@ Write on a foggy mirror with your finger. Your webcam shows up as frosted glass,
 
 Built with plain HTML, CSS and JavaScript in a single file. Hand tracking uses [MediaPipe Hand Landmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/hand_landmarker).
 
+## Live demo
+
+Open it online (no install): **https://anushkadas-coder.github.io/fogMirror/**
+
+Works on desktop and mobile. On a phone, just open the link, allow the camera, and draw on the glass with your finger. Tap **✋ hand tracking** to draw in the air instead.
+
 ## Features
 
 - Realistic fog: a blurred, milky copy of your camera feed with grain and condensation droplets
+- Works on **desktop and mobile**, in portrait and landscape
 - Draw with your **mouse, touch, or your finger in the air** (hand tracking)
 - Strokes fade and re-fog over time, and get thinner when you draw fast, like ink
 - Gestures to clear the glass and change the brush size
@@ -83,6 +90,14 @@ The status label next to the ✋ button shows what the tracker sees: `loading mo
 - A plain background helps.
 - If drawing triggers too easily or not at all, check the status label to see which gesture is being detected.
 
+## Mobile notes
+
+- Use a recent **Chrome (Android)** or **Safari 15+ (iPhone/iPad)**. The page must be opened over `https://` (GitHub Pages does this) or `localhost`.
+- Touch drawing is on by default. Hand tracking is off by default on phones to save battery and loading time. Tap **✋ hand tracking** to turn it on.
+- Prop the phone up so your hand is fully in frame. Hand tracking works best with the phone steady.
+- Rotating the phone clears the glass.
+- Recorded videos save to Downloads (Android) or appear in the download prompt (iOS).
+
 ## Troubleshooting
 
 | Problem | Fix |
@@ -93,6 +108,7 @@ The status label next to the ✋ button shows what the tracker sees: `loading mo
 | Status says `error` | Press F12, open the Console, and read the red message |
 | Status says `not seen` | Move your hand into frame, add more light, and face your palm to the camera |
 | Recording doesn't download | Use a recent Chrome or Edge. Some browsers don't support `MediaRecorder` |
+| Camera is blocked on a phone | Open the site over `https://`, and allow camera access in the browser's site settings |
 | Page looks stale after an update | Hard-refresh with Ctrl+F5 |
 
 ## How it works
