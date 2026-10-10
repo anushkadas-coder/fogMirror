@@ -10,18 +10,19 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17141d;--fg:#f1ecf8;--pill:rgba(30,26,40,.72)}}
 :root[data-theme="dark"]{--bg:#17141d;--fg:#f1ecf8;--pill:rgba(30,26,40,.72)}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
-html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden}
-#stage{position:relative;width:100%;height:100%}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+#stage{position:fixed;inset:0}
 canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
 video{position:absolute;width:2px;height:2px;opacity:0;pointer-events:none}
-#top{position:absolute;left:0;right:0;top:0;padding:14px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
+#top{position:absolute;left:0;right:0;top:0;padding:calc(14px + env(safe-area-inset-top,0px)) 14px 14px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
 h1{margin:0;font:400 2.1rem "Pinyon Script",cursive,serif;color:#fff;text-shadow:0 1px 10px rgba(0,0,0,.4)}
-#bar{position:absolute;left:12px;right:12px;bottom:12px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;pointer-events:none}
+#bar{position:absolute;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;pointer-events:none}
 button,.pill{pointer-events:auto;border:0;border-radius:999px;padding:8px 14px;background:var(--pill);color:var(--fg);font:inherit;font-size:.8rem;backdrop-filter:blur(8px);cursor:pointer;display:flex;align-items:center;gap:6px}
 button.on{background:#fff;color:#a2467a;font-weight:600}
 #rec.on{color:#d11}
 .pill input{width:80px;accent-color:#a2467a}
-#hint{position:absolute;left:50%;transform:translateX(-50%);width:max-content;max-width:90%;bottom:70px;text-align:center;background:rgba(0,0,0,.45);border-radius:999px;padding:6px 14px;font-size:.85rem;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.55);pointer-events:none;transition:opacity .6s;padding:0 16px}
+#hint{position:absolute;left:50%;transform:translateX(-50%);width:max-content;max-width:90%;bottom:calc(70px + env(safe-area-inset-bottom,0px));text-align:center;background:rgba(0,0,0,.45);border-radius:999px;padding:6px 14px;font-size:.85rem;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.55);pointer-events:none;transition:opacity .6s;padding:0 16px}
+@media (max-width:600px){h1{font-size:1.7rem}button,.pill{padding:7px 11px;font-size:.75rem}.pill input{width:56px}#bar{gap:6px}#hint{bottom:calc(112px + env(safe-area-inset-bottom,0px));font-size:.8rem}}
 </style>
 </head>
 <body>
@@ -49,10 +50,10 @@ import {HandLandmarker,FilesetResolver} from 'https://cdn.jsdelivr.net/npm/@medi
   var grain=mk(),gc=grain[0],gx=grain[1];gc.width=gc.height=128;
   var gi=gx.createImageData(128,128);for(var i=0;i<gi.data.length;i+=4){var v=200+Math.random()*55;gi.data[i]=gi.data[i+1]=gi.data[i+2]=v;gi.data[i+3]=Math.random()*38}
   gx.putImageData(gi,0,0);
-  var W=0,H=0,live=false,strokes=[],last=null,FADE=6000,BRUSH=28,air=false;
+  var W=0,H=0,live=false,strokes=[],last=null,FADE=6000,BRUSH=28,air=false,coarse=matchMedia('(pointer:coarse)').matches;
 
   function resize(){
-    var dpr=Math.min(window.devicePixelRatio||1,2);
+    var dpr=Math.min(window.devicePixelRatio||1,coarse?1.5:2);
     W=cv.clientWidth;H=cv.clientHeight;
     [cv,layer,mask,drops].forEach(function(c){c.width=W*dpr;c.height=H*dpr});
     [ctx,lctx,mctx,dctx].forEach(function(x){x.setTransform(dpr,0,0,dpr,0,0)});
@@ -67,7 +68,10 @@ import {HandLandmarker,FilesetResolver} from 'https://cdn.jsdelivr.net/npm/@medi
       dctx.fillStyle=g;dctx.beginPath();dctx.arc(x,y,r,0,7);dctx.fill();
     }
   }
-  window.addEventListener('resize',function(){strokes=[];resize()});resize();
+  var rt=null;
+  window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(function(){if(Math.abs(cv.clientWidth-W)>2||Math.abs(cv.clientHeight-H)>2)resize()},150)});
+  window.addEventListener('orientationchange',function(){strokes=[]});
+  resize();
 
   function drawSrc(x,w,h){
     x.save();x.translate(w,0);x.scale(-1,1);
@@ -154,7 +158,7 @@ import {HandLandmarker,FilesetResolver} from 'https://cdn.jsdelivr.net/npm/@medi
   }
 
   function pt(e){var r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
-  cv.addEventListener('pointerdown',function(e){if(air)return;cv.setPointerCapture(e.pointerId);last=pt(e);add(last,last);hint.style.opacity=0});
+  cv.addEventListener('pointerdown',function(e){cv.setPointerCapture(e.pointerId);last=pt(e);add(last,last);hint.style.opacity=0});
   cv.addEventListener('pointermove',function(e){if(!last)return;var p=pt(e);add(last,p);last=p});
   ['pointerup','pointercancel'].forEach(function(n){cv.addEventListener(n,function(){last=null})});
   function add(a,b){
@@ -193,8 +197,8 @@ import {HandLandmarker,FilesetResolver} from 'https://cdn.jsdelivr.net/npm/@medi
   };
 
   if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
-    navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false}).then(function(st){
-      vid.srcObject=st;vid.play();live=true;hint.textContent='draw with your mouse, or tap ✋ for hand tracking';$('air').click();
+    navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:1280},height:{ideal:720}},audio:false}).then(function(st){
+      vid.srcObject=st;vid.play();live=true;hint.textContent='draw with your '+(coarse?'finger':'mouse')+', or tap ✋ for hand tracking';if(!coarse)$('air').click();
     }).catch(function(){hint.textContent='camera blocked. showing a demo scene. draw on it!'});
   }else hint.textContent='no camera available. draw on the demo scene';
   frame();
